@@ -1,0 +1,19 @@
+{
+    "name": "Bridge.FacebookApi.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:104a557ed300c0c409380479f8b9ccbe",
+        "GUID:92c3d3f22ede62643b00b5951466b066"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
