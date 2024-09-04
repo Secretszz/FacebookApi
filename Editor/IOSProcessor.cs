@@ -30,7 +30,7 @@ namespace Bridge.FacebookApi
 		{
 			if (target == BuildTarget.iOS)
 			{
-				ThirdSDKSettings instance = ThirdSDKSettings.LoadInstance();
+				ThirdSDKSettings instance = ThirdSDKSettings.Instance;
 				var projPath = pathToBuildProject + "/Unity-iPhone.xcodeproj/project.pbxproj";
 				var proj = new PBXProject();
 				proj.ReadFromFile(projPath);
@@ -71,7 +71,6 @@ namespace Bridge.FacebookApi
 				objectiveCCode.Replace("**UNILINK**", instance.UniversalLink);
 				// 将修改后的 Objective-C 代码写回文件中
 				File.WriteAllText(objectiveCFilePath, objectiveCCode.ToString());
-				UnityEngine.Debug.Log("MooncakeConstant file modified at: " + objectiveCFilePath);
 			}
 		}
 	}
