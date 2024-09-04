@@ -30,7 +30,7 @@ namespace Bridge.FacebookApi
         [PostProcessBuild]
         public static void OnPostprocessBuild(BuildTarget target, string projectPath)
         {
-            ThirdSDKSettings settings = ThirdSDKSettings.LoadInstance();
+            ThirdSDKSettings settings = ThirdSDKSettings.Instance;
             string app_id = settings.FbAppId;
             string client_token = settings.FbClientToken;
             SetFacebookConfig(projectPath, app_id, client_token);
