@@ -22,8 +22,6 @@ namespace Bridge.FacebookApi
 	/// </summary>
 	internal static class IOSProcessor
 	{
-		private const string ApiPath = "Libraries/ThirdSDK/WxApi/Plugins/iOS/WeChatSDKManager.mm";
-		
 		[PostProcessBuild(10002)]
 		public static void OnPostProcessBuild(BuildTarget target, string pathToBuildProject)
 		{

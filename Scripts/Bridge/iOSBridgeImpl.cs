@@ -8,8 +8,10 @@
 // Create Time:		2024/09/03 10:53:45
 // *******************************************
 
+#if UNITY_IOS && !UNITY_EDITOR
 namespace Bridge.FacebookApi
 {
+	using Common;
 	using Newtonsoft.Json;
 	using UnityEngine;
 	using System;
@@ -263,3 +265,4 @@ namespace Bridge.FacebookApi
 		}
 	}
 }
+#endif

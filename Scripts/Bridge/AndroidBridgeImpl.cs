@@ -8,8 +8,10 @@
 // Create Time:		2024/09/03 10:21:27
 // *******************************************
 
+#if UNITY_ANDROID
 namespace Bridge.FacebookApi
 {
+	using Common;
 	using Newtonsoft.Json;
 	using System.Collections.Generic;
 	using UnityEngine;
@@ -155,9 +157,9 @@ namespace Bridge.FacebookApi
 				this.callback = callback;
 			}
 
-			public void onSuccess()
+			public void onSuccess(string accessToken)
 			{
-				callback?.OnSuccess();
+				callback?.OnSuccess(accessToken);
 			}
 
 			public void onCancel()
@@ -172,3 +174,4 @@ namespace Bridge.FacebookApi
 		}
 	}
 }
+#endif
