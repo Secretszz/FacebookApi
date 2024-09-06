@@ -20,14 +20,10 @@ namespace Bridge.FacebookApi
 
     public static class ManifestProcessor
     {
-        private const string MANIFEST_RELATIVE_PATH = "unityLibrary/src/main/AndroidManifest.xml";
-        private const string STRINGS_XML_PATH = "unityLibrary/src/main/res/values/strings.xml";
         private const string METADATA_APPLICATION_ID  = "com.facebook.sdk.ApplicationId";
         private const string METADATA_CLIENT_TOKEN = "com.facebook.sdk.ClientToken";
 
-        private static XNamespace ns = "http://schemas.android.com/apk/res/android";
-
-        [PostProcessBuild]
+        [PostProcessBuild(10001)]
         public static void OnPostprocessBuild(BuildTarget target, string projectPath)
         {
             ThirdSDKSettings settings = ThirdSDKSettings.Instance;
@@ -35,13 +31,16 @@ namespace Bridge.FacebookApi
             string client_token = settings.FbClientToken;
             SetFacebookConfig(projectPath, app_id, client_token);
             RefreshLaunchManifest(projectPath, app_id);
+            CopyNativeCode(projectPath);
+            Common.ManifestProcessor.ReplaceBuildDefinedCache.Add("##FACEBOOK_DEPENDENCIES##", "implementation(\"com.facebook.android:facebook-android-sdk:17.0.1\")");
         }
 
         private static void SetFacebookConfig(string projectPath, string app_id, string client_token)
         {
-            string stringsPath = Path.Combine(projectPath, STRINGS_XML_PATH);
+            string stringsPath = Path.Combine(projectPath, Common.ManifestProcessor.STRINGS_XML_PATH);
             if (!File.Exists(stringsPath))
             {
+                Directory.CreateDirectory(stringsPath.Replace("/strings.xml", ""));
                 File.WriteAllText(stringsPath, @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 </resources>");
@@ -62,7 +61,7 @@ namespace Bridge.FacebookApi
 
         private static void RefreshLaunchManifest(string projectPath, string app_id)
         {
-            string manifestPath = Path.Combine(projectPath, MANIFEST_RELATIVE_PATH);
+            string manifestPath = Path.Combine(projectPath, Common.ManifestProcessor.MANIFEST_RELATIVE_PATH);
 
             XDocument manifest;
             try
@@ -91,8 +90,8 @@ namespace Bridge.FacebookApi
                 elemManifest.Add(queries);
             }
             
-            queries.Add(new XElement("provider", new XAttribute(ns + "authorities", "com.facebook.katana.provider.PlatformProvider")));
-            queries.Add(new XElement("package", new XAttribute(ns + "name", "com.facebook.katana")));
+            queries.Add(new XElement("provider", new XAttribute(Common.ManifestProcessor.ns + "authorities", "com.facebook.katana.provider.PlatformProvider")));
+            queries.Add(new XElement("package", new XAttribute(Common.ManifestProcessor.ns + "name", "com.facebook.katana")));
 
             XElement elemApplication = elemManifest.Element("application");
             if (elemApplication == null)
@@ -101,13 +100,27 @@ namespace Bridge.FacebookApi
                 return;
             }
 
-            elemApplication.Add(new XElement("meta-data", new XAttribute(ns + "name", METADATA_APPLICATION_ID), new XAttribute(ns + "value", "@string/facebook_app_id")));
-            elemApplication.Add(new XElement("meta-data", new XAttribute(ns + "name", METADATA_CLIENT_TOKEN), new XAttribute(ns + "value", "@string/facebook_client_token")));
-            elemApplication.Add(new XElement("provider", new XAttribute(ns + "authorities", $"com.facebook.app.FacebookContentProvider{app_id}"),
-                    new XAttribute(ns + "name", "com.facebook.FacebookContentProvider"),
-                    new XAttribute(ns + "exported", "true")));
+            elemApplication.Add(new XElement("meta-data", new XAttribute(Common.ManifestProcessor.ns + "name", METADATA_APPLICATION_ID), new XAttribute(Common.ManifestProcessor.ns + "value", "@string/facebook_app_id")));
+            elemApplication.Add(new XElement("meta-data", new XAttribute(Common.ManifestProcessor.ns + "name", METADATA_CLIENT_TOKEN), new XAttribute(Common.ManifestProcessor.ns + "value", "@string/facebook_client_token")));
+            elemApplication.Add(new XElement("provider", new XAttribute(Common.ManifestProcessor.ns + "name", "com.facebook.FacebookContentProvider"),
+                    new XAttribute(Common.ManifestProcessor.ns + "authorities", $"com.facebook.app.FacebookContentProvider{app_id}"),
+                    new XAttribute(Common.ManifestProcessor.ns + "exported", "true")));
 
             elemManifest.Save(manifestPath);
+        }
+
+        private static void CopyNativeCode(string projectPath)
+        {
+            var remotePackagePath = ThirdSDKPackageManager.GetUnityPackagePath(ThirdSDKPackageManager.FacebookApiPackageName);
+            if (string.IsNullOrEmpty(remotePackagePath))
+            {
+                // 这个不是通过ump下载的包，查找工程内部文件夹
+                remotePackagePath = "Assets/ThirdSDK/FacebookApi";
+            }
+
+            remotePackagePath += "/Plugins/Android/facebook";
+            Debug.Log("remotePackagePath===" + remotePackagePath);
+            FileTool.DirectoryCopy(remotePackagePath, Path.Combine(projectPath, Common.ManifestProcessor.NATIVE_CODE_DIR, "facebook"));
         }
 
         private static void LogBuildFailed()

@@ -8,9 +8,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.bridge.common.listener.IInitListener;
+import com.bridge.common.listener.ILoginListener;
+import com.bridge.common.listener.IShareListener;
 import com.bridge.facebook.callback.LoginCallBack;
 import com.bridge.facebook.callback.ShareCallback;
-import com.bridge.facebook.listener.IBridgeListener;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookSdk;
@@ -65,7 +67,7 @@ public class FacebookSdkManager {
      * @param activity
      * @param listener
      */
-    public void initSDK(Activity activity, IBridgeListener listener){
+    public void initSDK(Activity activity, IInitListener listener){
         permissions = Arrays.asList(Permissions.PUBLIC_PROFILE, Permissions.GAMING_PROFILE, Permissions.EMAIL, Permissions.GAMING_USER_PICTURE);
         appEventsLogger = AppEventsLogger.newLogger(activity);
         if (isInitialized()){
@@ -114,11 +116,11 @@ public class FacebookSdkManager {
      * @param activity
      * @param callBack
      */
-    public void login(Activity activity, IBridgeListener callBack){
+    public void login(Activity activity, ILoginListener callBack){
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         if (accessToken != null && !accessToken.isExpired()){
             // 已登陆
-            callBack.onSuccess();
+            callBack.onSuccess(accessToken.toString());
             return;
         }
         logInWithReadPermissions(activity, callBack);
@@ -129,17 +131,17 @@ public class FacebookSdkManager {
      * @param activity
      * @param callBack
      */
-    public void retrieveLoginStatus(Activity activity, IBridgeListener callBack){
+    public void retrieveLoginStatus(Activity activity, ILoginListener callBack){
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         if (accessToken != null && !accessToken.isExpired()){
             // 已登陆
-            callBack.onSuccess();
+            callBack.onSuccess(accessToken.toString());
             return;
         }
         LoginManager.getInstance().retrieveLoginStatus(activity, new LoginStatusCallback() {
             @Override
             public void onCompleted(@NotNull AccessToken accessToken) {
-                callBack.onSuccess();
+                callBack.onSuccess(accessToken.toString());
             }
 
             @Override
@@ -159,7 +161,7 @@ public class FacebookSdkManager {
      * @param activity
      * @param callBack
      */
-    private void logInWithReadPermissions(Activity activity, IBridgeListener callBack){
+    private void logInWithReadPermissions(Activity activity, ILoginListener callBack){
         callbackManager = CallbackManager.Factory.create();
         LoginManager.getInstance().registerCallback(callbackManager, new LoginCallBack(callBack));
         LoginManager.getInstance().logInWithReadPermissions(activity, permissions);
@@ -171,7 +173,7 @@ public class FacebookSdkManager {
      * @param linkUrl 链接地址
      * @param callback 分享回调
      */
-    public void shareLink(Activity activity, String linkUrl, IBridgeListener callback){
+    public void shareLink(Activity activity, String linkUrl, IShareListener callback){
         if (ShareDialog.canShow(ShareLinkContent.class)){
             ShareLinkContent content = new ShareLinkContent.Builder()
                     .setContentUrl(Uri.parse(linkUrl))
@@ -191,7 +193,7 @@ public class FacebookSdkManager {
      * @param imagePath 图片本地地址
      * @param callback
      */
-    public void shareImage(Activity activity, String imagePath, IBridgeListener callback){
+    public void shareImage(Activity activity, String imagePath, IShareListener callback){
         if (ShareDialog.canShow(SharePhotoContent.class)){
             SharePhoto photo = new SharePhoto.Builder().setImageUrl(Uri.parse(imagePath)).build();
             SharePhotoContent content = new SharePhotoContent.Builder().addPhoto(photo).build();
@@ -210,7 +212,7 @@ public class FacebookSdkManager {
      * @param data 图片数据
      * @param callback
      */
-    public void shareImage(Activity activity, byte[] data, IBridgeListener callback){
+    public void shareImage(Activity activity, byte[] data, IShareListener callback){
         if (ShareDialog.canShow(SharePhotoContent.class)){
             Bitmap bmp = BitmapFactory.decodeByteArray(data, 0 , data.length);
             SharePhoto photo = new SharePhoto.Builder().setBitmap(bmp).build();
@@ -230,7 +232,7 @@ public class FacebookSdkManager {
      * @param videoUrl 视频本地地址
      * @param callback
      */
-    public void shareVideo(Activity activity, String videoUrl, IBridgeListener callback) {
+    public void shareVideo(Activity activity, String videoUrl, IShareListener callback) {
         if (ShareDialog.canShow(ShareVideoContent.class)){
             ShareVideo shareVideo = new ShareVideo.Builder().setLocalUrl(Uri.parse(videoUrl)).build();
             ShareVideoContent content = new ShareVideoContent.Builder().setVideo(shareVideo).build();
@@ -251,7 +253,7 @@ public class FacebookSdkManager {
      * @param imageDataList
      * @param callback
      */
-    public void shareMedia(Activity activity, String[] videoList, String[] imageList, byte[][] imageDataList, final IBridgeListener callback) {
+    public void shareMedia(Activity activity, String[] videoList, String[] imageList, byte[][] imageDataList, final IShareListener callback) {
         if (videoList.length + imageList.length + imageDataList.length > 6){
             callback.onError(-1, "There are more than 6 files");
             return;

@@ -8,8 +8,11 @@
 // Create Time:		2024/09/03 10:51:48
 // *******************************************
 
+#if UNITY_EDITOR
+
 namespace Bridge.FacebookApi
 {
+	using Common;
 	using System.Collections.Generic;
 
 	/// <summary>
@@ -33,12 +36,12 @@ namespace Bridge.FacebookApi
 
 		void IBridge.RetrieveLoginStatus(ILoginListener callback)
 		{
-			callback?.OnSuccess();
+			callback?.OnSuccess("");
 		}
 
 		void IBridge.Login(ILoginListener callback)
 		{
-			callback?.OnSuccess();
+			callback?.OnSuccess("");
 		}
 
 		void IBridge.Logout()
@@ -78,3 +81,5 @@ namespace Bridge.FacebookApi
 		}
 	}
 }
+
+#endif

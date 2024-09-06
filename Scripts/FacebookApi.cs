@@ -10,6 +10,7 @@
 
 namespace Bridge.FacebookApi
 {
+	using Common;
 	using System.Collections.Generic;
 
 	/// <summary>

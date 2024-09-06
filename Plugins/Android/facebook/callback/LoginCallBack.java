@@ -2,14 +2,14 @@ package com.bridge.facebook.callback;
 
 import androidx.annotation.NonNull;
 
-import com.bridge.facebook.listener.IBridgeListener;
+import com.bridge.common.listener.ILoginListener;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.share.Sharer;
+import com.facebook.login.LoginResult;
 
-public class ShareCallback implements FacebookCallback<Sharer.Result> {
-    IBridgeListener listener;
-    public ShareCallback(IBridgeListener listener){
+public class LoginCallBack implements FacebookCallback<LoginResult> {
+    ILoginListener listener;
+    public LoginCallBack(ILoginListener listener){
         this.listener = listener;
     }
 
@@ -24,7 +24,7 @@ public class ShareCallback implements FacebookCallback<Sharer.Result> {
     }
 
     @Override
-    public void onSuccess(Sharer.Result result) {
-        this.listener.onSuccess();
+    public void onSuccess(LoginResult loginResult) {
+        this.listener.onSuccess(loginResult.getAccessToken().toString());
     }
 }
