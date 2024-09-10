@@ -32,7 +32,7 @@ namespace Bridge.FacebookApi
             SetFacebookConfig(projectPath, app_id, client_token);
             RefreshLaunchManifest(projectPath, app_id);
             CopyNativeCode(projectPath);
-            Common.ManifestProcessor.ReplaceBuildDefinedCache.Add("##FACEBOOK_DEPENDENCIES##", "implementation(\"com.facebook.android:facebook-android-sdk:17.0.1\")");
+            Common.ManifestProcessor.ReplaceBuildDefinedCache[Common.ManifestProcessor.FACEBOOK_DEPENDENCIES] = "implementation(\"com.facebook.android:facebook-android-sdk:17.0.1\")";
         }
 
         private static void SetFacebookConfig(string projectPath, string app_id, string client_token)
