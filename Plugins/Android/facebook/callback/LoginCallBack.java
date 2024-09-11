@@ -2,14 +2,14 @@ package com.bridge.facebook.callback;
 
 import androidx.annotation.NonNull;
 
-import com.bridge.common.listener.ILoginListener;
+import com.bridge.common.listener.IBridgeListener;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.login.LoginResult;
 
 public class LoginCallBack implements FacebookCallback<LoginResult> {
-    ILoginListener listener;
-    public LoginCallBack(ILoginListener listener){
+    IBridgeListener listener;
+    public LoginCallBack(IBridgeListener listener){
         this.listener = listener;
     }
 

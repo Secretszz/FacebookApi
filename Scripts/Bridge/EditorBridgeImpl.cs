@@ -20,9 +20,9 @@ namespace Bridge.FacebookApi
 	/// </summary>
 	internal class EditorBridgeImpl : IBridge
 	{
-		void IBridge.InitSDK(IInitListener callback)
+		void IBridge.InitSDK(IBridgeListener callback)
 		{
-			callback?.OnSuccess();
+			callback?.OnSuccess("");
 		}
 
 		void IBridge.SetAdvertiserTrackingEnabled(bool _enabled)
@@ -34,12 +34,12 @@ namespace Bridge.FacebookApi
 			return false;
 		}
 
-		void IBridge.RetrieveLoginStatus(ILoginListener callback)
+		void IBridge.RetrieveLoginStatus(IBridgeListener callback)
 		{
 			callback?.OnSuccess("");
 		}
 
-		void IBridge.Login(ILoginListener callback)
+		void IBridge.Login(IBridgeListener callback)
 		{
 			callback?.OnSuccess("");
 		}
@@ -48,24 +48,24 @@ namespace Bridge.FacebookApi
 		{
 		}
 
-		void IBridge.ShareLink(string linkUrl, IShareListener shareListener)
+		void IBridge.ShareLink(string linkUrl, IBridgeListener shareListener)
 		{
-			shareListener?.OnSuccess();
+			shareListener?.OnSuccess("");
 		}
 
-		void IBridge.ShareVideo(string videoUrl, IShareListener shareListener)
+		void IBridge.ShareVideo(string videoUrl, IBridgeListener shareListener)
 		{
-			shareListener?.OnSuccess();
+			shareListener?.OnSuccess("");
 		}
 
-		void IBridge.ShareImage(string imagePath, IShareListener shareListener)
+		void IBridge.ShareImage(string imagePath, IBridgeListener shareListener)
 		{
-			shareListener?.OnSuccess();
+			shareListener?.OnSuccess("");
 		}
 
-		void IBridge.ShareImage(byte[] imageData, IShareListener shareListener)
+		void IBridge.ShareImage(byte[] imageData, IBridgeListener shareListener)
 		{
-			shareListener?.OnSuccess();
+			shareListener?.OnSuccess("");
 		}
 
 		void IBridge.FBLogPurchase(float priceAmount, string priceCurrency, string packageName)

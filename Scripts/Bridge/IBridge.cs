@@ -23,7 +23,7 @@ namespace Bridge.FacebookApi
 		/// 初始化Facebook SDK
 		/// </summary>
 		/// <param name="initListener"></param>
-		void InitSDK(IInitListener initListener);
+		void InitSDK(IBridgeListener initListener);
 
 		/// <summary>
 		/// 设置iOS的ATT设置
@@ -41,13 +41,13 @@ namespace Bridge.FacebookApi
 		/// 检查自动登录状态
 		/// </summary>
 		/// <param name="loginListener"></param>
-		void RetrieveLoginStatus(ILoginListener loginListener);
+		void RetrieveLoginStatus(IBridgeListener loginListener);
 
 		/// <summary>
 		/// 登录
 		/// </summary>
 		/// <param name="loginListener"></param>
-		void Login(ILoginListener loginListener);
+		void Login(IBridgeListener loginListener);
 
 		/// <summary>
 		/// Facebook SDK 登出
@@ -59,28 +59,28 @@ namespace Bridge.FacebookApi
 		/// </summary>
 		/// <param name="linkUrl">链接地址</param>
 		/// <param name="shareListener">拉起分享窗口事件</param>
-		void ShareLink(string linkUrl, IShareListener shareListener);
+		void ShareLink(string linkUrl, IBridgeListener shareListener);
 
 		/// <summary>
 		/// 分享视频
 		/// </summary>
 		/// <param name="videoUrl">视频地址</param>
 		/// <param name="shareListener">拉起分享窗口事件</param>
-		void ShareVideo(string videoUrl, IShareListener shareListener);
+		void ShareVideo(string videoUrl, IBridgeListener shareListener);
 
 		/// <summary>
 		/// 分享图片
 		/// </summary>
 		/// <param name="imagePath">图片本地地址</param>
 		/// <param name="shareListener">拉起分享窗口事件</param>
-		void ShareImage(string imagePath, IShareListener shareListener);
+		void ShareImage(string imagePath, IBridgeListener shareListener);
 
 		/// <summary>
 		/// 分享图片
 		/// </summary>
 		/// <param name="imageData">图片数据</param>
 		/// <param name="shareListener">拉起分享窗口事件</param>
-		void ShareImage(byte[] imageData, IShareListener shareListener);
+		void ShareImage(byte[] imageData, IBridgeListener shareListener);
 
 		/// <summary>
 		/// 充值成功的日志事件
