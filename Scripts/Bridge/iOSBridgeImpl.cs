@@ -8,9 +8,10 @@
 // Create Time:		2024/09/03 10:53:45
 // *******************************************
 
-#if UNITY_IOS && !UNITY_EDITOR
+#if UNITY_IOS
 namespace Bridge.FacebookApi
 {
+	using AOT;
 	using Common;
 	using Newtonsoft.Json;
 	using UnityEngine;
@@ -23,10 +24,10 @@ namespace Bridge.FacebookApi
 	/// </summary>
 	internal class iOSBridgeImpl : IBridge
 	{
-		void IBridge.InitSDK(IInitListener initListener)
+		void IBridge.InitSDK(IBridgeListener initListener)
 		{
-			_initListener = initListener;
-			fb_sdkInitialize(InitOnSuccess, InitOnError);
+			InitCallback._initListener = initListener;
+			fb_sdkInitialize(InitCallback.OnSuccess, InitCallback.OnCancel, InitCallback.OnError);
 		}
 
 		void IBridge.SetAdvertiserTrackingEnabled(bool _enabled)
@@ -39,18 +40,19 @@ namespace Bridge.FacebookApi
 			return false;
 		}
 
-		void IBridge.RetrieveLoginStatus(ILoginListener loginListener)
+		void IBridge.RetrieveLoginStatus(IBridgeListener loginListener)
 		{
-			if (fb_isLogged())
+			string accessToken = fb_getAccessToken();
+			if (!string.IsNullOrEmpty(accessToken))
 			{
-				loginListener?.OnSuccess();
+				loginListener?.OnSuccess(accessToken);
 				return;
 			}
 			
 			LogInWithReadPermissions(loginListener);
 		}
 
-		void IBridge.Login(ILoginListener loginListener)
+		void IBridge.Login(IBridgeListener loginListener)
 		{
 			LogInWithReadPermissions(loginListener);
 		}
@@ -60,39 +62,39 @@ namespace Bridge.FacebookApi
 			fb_logout();
 		}
 
-		void IBridge.ShareLink(string linkUrl, IShareListener shareListener)
+		void IBridge.ShareLink(string linkUrl, IBridgeListener shareListener)
 		{
-			_shareListener = shareListener;
-			fb_shareLink(linkUrl, ShareOnSuccess, ShareOnCancel, ShareOnError);
+			ShareCallback._shareListener = shareListener;
+			fb_shareLink(linkUrl, ShareCallback.OnSuccess, ShareCallback.OnCancel, ShareCallback.OnError);
 		}
 
-		void IBridge.ShareVideo(string videoUrl, IShareListener shareListener)
+		void IBridge.ShareVideo(string videoUrl, IBridgeListener shareListener)
 		{
-			_shareListener = shareListener;
-			fb_shareVideo(videoUrl, ShareOnSuccess, ShareOnCancel, ShareOnError);
+			ShareCallback._shareListener = shareListener;
+			fb_shareVideo(videoUrl, ShareCallback.OnSuccess, ShareCallback.OnCancel, ShareCallback.OnError);
 		}
 
-		void IBridge.ShareImage(string imagePath, IShareListener shareListener)
+		void IBridge.ShareImage(string imagePath, IBridgeListener shareListener)
 		{
-			_shareListener = shareListener;
-			fb_shareImage(imagePath, ShareOnSuccess, ShareOnCancel, ShareOnError);
+			ShareCallback._shareListener = shareListener;
+			fb_shareImage(imagePath, ShareCallback.OnSuccess, ShareCallback.OnCancel, ShareCallback.OnError);
 		}
 
-		void IBridge.ShareImage(byte[] imageData, IShareListener shareListener)
+		void IBridge.ShareImage(byte[] imageData, IBridgeListener shareListener)
 		{
 			try
 			{
-				_shareListener = shareListener;
+				ShareCallback._shareListener = shareListener;
 				int length = imageData.Length;
 				IntPtr buffer = Marshal.AllocHGlobal(length);
 				Marshal.Copy(imageData, 0, buffer, length);
-				fb_shareImageWithDatas(buffer, length, ShareOnSuccess, ShareOnCancel, ShareOnError);
+				fb_shareImageWithDatas(buffer, length, ShareCallback.OnSuccess, ShareCallback.OnCancel, ShareCallback.OnError);
 			}
 			catch (Exception e)
 			{
 				string err = e.Message;
 				Debug.LogError("字节流转指针解析错误：" + err);
-				_shareListener = null;
+				ShareCallback._shareListener = null;
 				shareListener?.OnError(-1, err);
 			}
 		}
@@ -106,7 +108,7 @@ namespace Bridge.FacebookApi
 
 		void IBridge.FBLogEvent(string logEvent, float valueToSum, Dictionary<string, string> pars)
 		{
-			fb_logEvent(logEvent, valueToSum, JsonConvert.SerializeObject(pars));
+			fb_logEventWithSum(logEvent, valueToSum, JsonConvert.SerializeObject(pars));
 		}
 
 		void IBridge.FBLogEvent(string logEvent, Dictionary<string, string> pars)
@@ -114,20 +116,20 @@ namespace Bridge.FacebookApi
 			fb_logEvent(logEvent, JsonConvert.SerializeObject(pars));
 		}
 		
-		private void LogInWithReadPermissions(ILoginListener loginListener)
+		private void LogInWithReadPermissions(IBridgeListener loginListener)
 		{
-			_loginListener = loginListener;
-			fb_logInWithReadPermissions(LoginOnSuccess, LoginOnCancel, LoginOnError);
+			LoginCallback._loginListener = loginListener;
+			fb_logInWithReadPermissions(LoginCallback.OnSuccess, LoginCallback.OnCancel, LoginCallback.OnError);
 		}
 
 		[DllImport("__Internal")]
-		private static extern void fb_sdkInitialize(FBOnSuccess onSuccess, FBOnError onError);
+		private static extern void fb_sdkInitialize(U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError);
 
 		[DllImport("__Internal")]
-		private static extern void fb_logInWithReadPermissions(FBOnSuccess onSuccess, FBOnCancel onCancel, FBOnError onError);
+		private static extern void fb_logInWithReadPermissions(U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError);
 
 		[DllImport("__Internal")]
-		private static extern bool fb_isLogged();
+		private static extern string fb_getAccessToken();
 
 		[DllImport("__Internal")]
 		private static extern void fb_logout();
@@ -136,132 +138,138 @@ namespace Bridge.FacebookApi
 		private static extern void fb_logPurchase(string logName, double priceAmount, string priceCurrency, string extra);
 
 		[DllImport("__Internal")]
-		private static extern void fb_logEvent(string logName, double valueToSum, string extra);
+		private static extern void fb_logEventWithSum(string logName, double valueToSum, string extra);
 
 		[DllImport("__Internal")]
 		private static extern void fb_logEvent(string logName, string extra);
 
 		[DllImport("__Internal")]
-		private static extern void fb_shareImage(string imagePath, FBOnSuccess onSuccess, FBOnCancel onCancel, FBOnError onError);
+		private static extern void fb_shareImage(string imagePath, U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError);
 
 		[DllImport("__Internal")]
-		private static extern void fb_shareImageWithDatas(IntPtr imageDatas, int length, FBOnSuccess onSuccess, FBOnCancel onCancel, FBOnError onError);
+		private static extern void fb_shareImageWithDatas(IntPtr imageDatas, int length, U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError);
 
 		[DllImport("__Internal")]
-		private static extern void fb_shareLink(string uri, FBOnSuccess onSuccess, FBOnCancel onCancel, FBOnError onError);
+		private static extern void fb_shareLink(string uri, U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError);
 
 		[DllImport("__Internal")]
-		private static extern void fb_shareVideo(string uri, FBOnSuccess onSuccess, FBOnCancel onCancel, FBOnError onError);
+		private static extern void fb_shareVideo(string uri, U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError);
 
 		[DllImport("__Internal")]
 		private static extern void fb_setAdvertiserTrackingEnabled(bool enabled);
 
-		/// <summary>
-		/// iOS桥接成功回调事件
-		/// </summary>
-		private delegate void FBOnSuccess();
-
-		/// <summary>
-		/// iOS桥接取消回调事件
-		/// </summary>
-		private delegate void FBOnCancel();
-
-		/// <summary>
-		/// iOS桥接错误回调事件
-		/// </summary>
-		private delegate void FBOnError(int errCode, string errMsg);
-
-		/// <summary>
-		/// Unity分享回调事件
-		/// </summary>
-		private static IInitListener _initListener;
-
-		/// <summary>
-		/// Unity登录回调事件
-		/// </summary>
-		private static ILoginListener _loginListener;
-
-		/// <summary>
-		/// Unity登录回调事件
-		/// </summary>
-		private static IShareListener _shareListener;
-
-		/// <summary>
-		/// iOS桥接分享回调事件
-		/// </summary>
-		[AOT.MonoPInvokeCallback(typeof(FBOnSuccess))]
-		private static void InitOnSuccess()
+		private static class InitCallback
 		{
-			_initListener?.OnSuccess();
+			/// <summary>
+			/// 支付回调监听
+			/// </summary>
+			public static IBridgeListener _initListener;
+
+			/// <summary>
+			/// 支付成功回调桥接函数
+			/// </summary>
+			/// <param name="result"></param>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Success))]
+			public static void OnSuccess(string result)
+			{
+				_initListener?.OnSuccess(result);
+			}
+
+			/// <summary>
+			/// 支付用户取消回调桥接函数
+			/// </summary>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Cancel))]
+			public static void OnCancel()
+			{
+				_initListener?.OnCancel();
+			}
+
+			/// <summary>
+			/// 支付错误回调桥接函数
+			/// </summary>
+			/// <param name="errCode"></param>
+			/// <param name="errMsg"></param>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Error))]
+			public static void OnError(int errCode, string errMsg)
+			{
+				_initListener?.OnError(errCode, errMsg);
+			}
 		}
-
-		/// <summary>
-		/// iOS桥接分享回调事件
-		/// </summary>
-		/// <param name="errCode"></param>
-		/// <param name="errMsg"></param>
-		[AOT.MonoPInvokeCallback(typeof(FBOnError))]
-		private static void InitOnError(int errCode, string errMsg)
+		
+		private static class ShareCallback
 		{
-			_initListener?.OnError(errCode, errMsg);
+			/// <summary>
+			/// 分享回调监听
+			/// </summary>
+			public static IBridgeListener _shareListener;
+
+			/// <summary>
+			/// 支付成功回调桥接函数
+			/// </summary>
+			/// <param name="result"></param>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Success))]
+			public static void OnSuccess(string result)
+			{
+				_shareListener?.OnSuccess(result);
+			}
+
+			/// <summary>
+			/// 支付用户取消回调桥接函数
+			/// </summary>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Cancel))]
+			public static void OnCancel()
+			{
+				_shareListener?.OnCancel();
+			}
+
+			/// <summary>
+			/// 支付错误回调桥接函数
+			/// </summary>
+			/// <param name="errCode"></param>
+			/// <param name="errMsg"></param>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Error))]
+			public static void OnError(int errCode, string errMsg)
+			{
+				_shareListener?.OnError(errCode, errMsg);
+			}
 		}
-
-		/// <summary>
-		/// iOS桥接分享回调事件
-		/// </summary>
-		[AOT.MonoPInvokeCallback(typeof(FBOnSuccess))]
-		private static void LoginOnSuccess()
+		
+		private static class LoginCallback
 		{
-			_loginListener?.OnSuccess();
-		}
+			/// <summary>
+			/// 权限回调监听
+			/// </summary>
+			public static IBridgeListener _loginListener;
 
-		/// <summary>
-		/// iOS桥接分享回调事件
-		/// </summary>
-		[AOT.MonoPInvokeCallback(typeof(FBOnSuccess))]
-		private static void LoginOnCancel()
-		{
-			_loginListener?.OnCancel();
-		}
+			/// <summary>
+			/// 支付成功回调桥接函数
+			/// </summary>
+			/// <param name="result"></param>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Success))]
+			public static void OnSuccess(string result)
+			{
+				_loginListener?.OnSuccess(result);
+			}
 
-		/// <summary>
-		/// iOS桥接分享回调事件
-		/// </summary>
-		/// <param name="errCode"></param>
-		/// <param name="errMsg"></param>
-		[AOT.MonoPInvokeCallback(typeof(FBOnError))]
-		private static void LoginOnError(int errCode, string errMsg)
-		{
-			_loginListener?.OnError(errCode, errMsg);
-		}
+			/// <summary>
+			/// 支付用户取消回调桥接函数
+			/// </summary>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Cancel))]
+			public static void OnCancel()
+			{
+				_loginListener?.OnCancel();
+			}
 
-		/// <summary>
-		/// iOS桥接分享回调事件
-		/// </summary>
-		[AOT.MonoPInvokeCallback(typeof(FBOnSuccess))]
-		private static void ShareOnSuccess()
-		{
-			_shareListener?.OnSuccess();
-		}
-
-		/// <summary>
-		/// iOS桥接分享回调事件
-		/// </summary>
-		[AOT.MonoPInvokeCallback(typeof(FBOnSuccess))]
-		private static void ShareOnCancel()
-		{
-			_shareListener?.OnCancel();
-		}
-
-		/// <summary>
-		/// iOS桥接分享回调事件
-		/// </summary>
-		/// <param name="errCode"></param>
-		/// <param name="errMsg"></param>
-		[AOT.MonoPInvokeCallback(typeof(FBOnError))]
-		private static void ShareOnError(int errCode, string errMsg)
-		{
-			_shareListener?.OnError(errCode, errMsg);
+			/// <summary>
+			/// 支付错误回调桥接函数
+			/// </summary>
+			/// <param name="errCode"></param>
+			/// <param name="errMsg"></param>
+			[MonoPInvokeCallback(typeof(U3DBridgeCallback_Error))]
+			public static void OnError(int errCode, string errMsg)
+			{
+				_loginListener?.OnError(errCode, errMsg);
+			}
 		}
 	}
 }

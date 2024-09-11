@@ -7,18 +7,17 @@
 
 #import "FBSDKCoreKit/FBSDKCoreKit.h"
 #import "FBSDKShareKit/FBSDKShareKit.h"
+#import "CommonApi.h"
 
 /**
  完成登陆回调事件
  */
-typedef void(*UnityOnCompleteLogin)(bool success, const char* _Nullable message);
-typedef void(*UnityOnCompleteShare)(bool success, const char* _Nullable message);
-
 @interface FBSDKManager : NSObject<FBSDKSharingDelegate>
 
 @property (nonatomic, assign) BOOL initialized;
-@property (nonatomic, assign) UnityOnCompleteLogin onCompleteLogin;
-@property (nonatomic, assign) UnityOnCompleteShare onCompleteShare;
+@property (nonatomic, assign) U3DBridgeCallback_Success onSuccess;
+@property (nonatomic, assign) U3DBridgeCallback_Cancel onCancel;
+@property (nonatomic, assign) U3DBridgeCallback_Error onError;
 
 + (FBSDKManager *) instance;
 
