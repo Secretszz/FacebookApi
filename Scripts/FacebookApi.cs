@@ -46,7 +46,7 @@ namespace Bridge.FacebookApi
 		/// 初始化Facebook SDK
 		/// </summary>
 		/// <param name="initListener"></param>
-		public static void InitSDK(IInitListener initListener)
+		public static void InitSDK(IBridgeListener initListener)
 		{
 			bridgeImpl.InitSDK(initListener);
 		}
@@ -73,7 +73,7 @@ namespace Bridge.FacebookApi
 		/// 检查自动登录状态
 		/// </summary>
 		/// <param name="loginListener"></param>
-		public static void RetrieveLoginStatus(ILoginListener loginListener)
+		public static void RetrieveLoginStatus(IBridgeListener loginListener)
 		{
 			bridgeImpl.RetrieveLoginStatus(loginListener);
 		}
@@ -82,7 +82,7 @@ namespace Bridge.FacebookApi
 		/// 登录
 		/// </summary>
 		/// <param name="loginListener"></param>
-		public static void Login(ILoginListener loginListener)
+		public static void Login(IBridgeListener loginListener)
 		{
 			bridgeImpl.Login(loginListener);
 		}
@@ -100,7 +100,7 @@ namespace Bridge.FacebookApi
 		/// </summary>
 		/// <param name="linkUrl">链接地址</param>
 		/// <param name="shareListener">拉起分享窗口事件</param>
-		public static void ShareLink(string linkUrl, IShareListener shareListener)
+		public static void ShareLink(string linkUrl, IBridgeListener shareListener)
 		{
 			bridgeImpl.ShareLink(linkUrl, shareListener);
 		}
@@ -110,7 +110,7 @@ namespace Bridge.FacebookApi
 		/// </summary>
 		/// <param name="videoUrl">视频地址</param>
 		/// <param name="shareListener">拉起分享窗口事件</param>
-		public static void ShareVideo(string videoUrl, IShareListener shareListener)
+		public static void ShareVideo(string videoUrl, IBridgeListener shareListener)
 		{
 			bridgeImpl.ShareVideo(videoUrl, shareListener);
 		}
@@ -120,7 +120,7 @@ namespace Bridge.FacebookApi
 		/// </summary>
 		/// <param name="imagePath">图片本地地址</param>
 		/// <param name="shareListener">拉起分享窗口事件</param>
-		public static void ShareImage(string imagePath, IShareListener shareListener)
+		public static void ShareImage(string imagePath, IBridgeListener shareListener)
 		{
 			bridgeImpl.ShareImage(imagePath, shareListener);
 		}
@@ -130,7 +130,7 @@ namespace Bridge.FacebookApi
 		/// </summary>
 		/// <param name="imageData">图片数据</param>
 		/// <param name="shareListener">拉起分享窗口事件</param>
-		public static void ShareImage(byte[] imageData, IShareListener shareListener)
+		public static void ShareImage(byte[] imageData, IBridgeListener shareListener)
 		{
 			bridgeImpl.ShareImage(imageData, shareListener);
 		}

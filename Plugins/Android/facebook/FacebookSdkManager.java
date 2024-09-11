@@ -6,11 +6,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 
-import com.bridge.common.listener.IInitListener;
-import com.bridge.common.listener.ILoginListener;
-import com.bridge.common.listener.IShareListener;
+import com.bridge.common.listener.IBridgeListener;
+import com.bridge.common.util.BridgeUtil;
 import com.bridge.facebook.callback.LoginCallBack;
 import com.bridge.facebook.callback.ShareCallback;
 import com.facebook.AccessToken;
@@ -28,12 +26,10 @@ import com.facebook.share.model.ShareVideoContent;
 import com.facebook.share.widget.ShareDialog;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Currency;
-import java.util.Iterator;
 import java.util.List;
 
 public class FacebookSdkManager {
@@ -67,11 +63,11 @@ public class FacebookSdkManager {
      * @param activity
      * @param listener
      */
-    public void initSDK(Activity activity, IInitListener listener){
+    public void initSDK(Activity activity, IBridgeListener listener){
         permissions = Arrays.asList(Permissions.PUBLIC_PROFILE, Permissions.GAMING_PROFILE, Permissions.EMAIL, Permissions.GAMING_USER_PICTURE);
         appEventsLogger = AppEventsLogger.newLogger(activity);
         if (isInitialized()){
-            listener.onSuccess();
+            listener.onSuccess("");
         } else {
             listener.onError(-1, "");
         }
@@ -116,7 +112,7 @@ public class FacebookSdkManager {
      * @param activity
      * @param callBack
      */
-    public void login(Activity activity, ILoginListener callBack){
+    public void login(Activity activity, IBridgeListener callBack){
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         if (accessToken != null && !accessToken.isExpired()){
             // 已登陆
@@ -131,7 +127,7 @@ public class FacebookSdkManager {
      * @param activity
      * @param callBack
      */
-    public void retrieveLoginStatus(Activity activity, ILoginListener callBack){
+    public void retrieveLoginStatus(Activity activity, IBridgeListener callBack){
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         if (accessToken != null && !accessToken.isExpired()){
             // 已登陆
@@ -161,7 +157,7 @@ public class FacebookSdkManager {
      * @param activity
      * @param callBack
      */
-    private void logInWithReadPermissions(Activity activity, ILoginListener callBack){
+    private void logInWithReadPermissions(Activity activity, IBridgeListener callBack){
         callbackManager = CallbackManager.Factory.create();
         LoginManager.getInstance().registerCallback(callbackManager, new LoginCallBack(callBack));
         LoginManager.getInstance().logInWithReadPermissions(activity, permissions);
@@ -173,7 +169,7 @@ public class FacebookSdkManager {
      * @param linkUrl 链接地址
      * @param callback 分享回调
      */
-    public void shareLink(Activity activity, String linkUrl, IShareListener callback){
+    public void shareLink(Activity activity, String linkUrl, IBridgeListener callback){
         if (ShareDialog.canShow(ShareLinkContent.class)){
             ShareLinkContent content = new ShareLinkContent.Builder()
                     .setContentUrl(Uri.parse(linkUrl))
@@ -193,7 +189,7 @@ public class FacebookSdkManager {
      * @param imagePath 图片本地地址
      * @param callback
      */
-    public void shareImage(Activity activity, String imagePath, IShareListener callback){
+    public void shareImage(Activity activity, String imagePath, IBridgeListener callback){
         if (ShareDialog.canShow(SharePhotoContent.class)){
             SharePhoto photo = new SharePhoto.Builder().setImageUrl(Uri.parse(imagePath)).build();
             SharePhotoContent content = new SharePhotoContent.Builder().addPhoto(photo).build();
@@ -212,7 +208,7 @@ public class FacebookSdkManager {
      * @param data 图片数据
      * @param callback
      */
-    public void shareImage(Activity activity, byte[] data, IShareListener callback){
+    public void shareImage(Activity activity, byte[] data, IBridgeListener callback){
         if (ShareDialog.canShow(SharePhotoContent.class)){
             Bitmap bmp = BitmapFactory.decodeByteArray(data, 0 , data.length);
             SharePhoto photo = new SharePhoto.Builder().setBitmap(bmp).build();
@@ -232,7 +228,7 @@ public class FacebookSdkManager {
      * @param videoUrl 视频本地地址
      * @param callback
      */
-    public void shareVideo(Activity activity, String videoUrl, IShareListener callback) {
+    public void shareVideo(Activity activity, String videoUrl, IBridgeListener callback) {
         if (ShareDialog.canShow(ShareVideoContent.class)){
             ShareVideo shareVideo = new ShareVideo.Builder().setLocalUrl(Uri.parse(videoUrl)).build();
             ShareVideoContent content = new ShareVideoContent.Builder().setVideo(shareVideo).build();
@@ -253,7 +249,7 @@ public class FacebookSdkManager {
      * @param imageDataList
      * @param callback
      */
-    public void shareMedia(Activity activity, String[] videoList, String[] imageList, byte[][] imageDataList, final IShareListener callback) {
+    public void shareMedia(Activity activity, String[] videoList, String[] imageList, byte[][] imageDataList, final IBridgeListener callback) {
         if (videoList.length + imageList.length + imageDataList.length > 6){
             callback.onError(-1, "There are more than 6 files");
             return;
@@ -290,7 +286,7 @@ public class FacebookSdkManager {
      * @param pars
      */
     public void logPurchase(double price, String currency, String pars){
-        Bundle parameters = json2Bundle(pars);
+        Bundle parameters = BridgeUtil.json2Bundle(pars);
         if (parameters != null){
             appEventsLogger.logPurchase(new BigDecimal(price), Currency.getInstance(currency), parameters);
         }
@@ -303,7 +299,7 @@ public class FacebookSdkManager {
      * @param pars
      */
     public void logEvent(String logEventName, double valueToSum, String pars){
-        Bundle parameters = json2Bundle(pars);
+        Bundle parameters = BridgeUtil.json2Bundle(pars);
         if (parameters != null){
             appEventsLogger.logEvent(logEventName, valueToSum, parameters);
         }
@@ -315,33 +311,9 @@ public class FacebookSdkManager {
      * @param pars
      */
     public void logEvent(String logEventName, String pars){
-        Bundle parameters = json2Bundle(pars);
+        Bundle parameters = BridgeUtil.json2Bundle(pars);
         if (parameters != null){
             appEventsLogger.logEvent(logEventName, parameters);
-        }
-    }
-
-    /**
-     * 将json字符串转成Bundle
-     * @param json 记录事件的参数
-     * @return 参数Bundle
-     */
-    private Bundle json2Bundle(String json){
-        try {
-            JSONObject jsonObject = new JSONObject(json);
-            Iterator<String> keys = jsonObject.keys();
-            Bundle parameters = new Bundle();
-            while (keys.hasNext()){
-                String key = keys.next();
-                String value = (String) jsonObject.get(key);
-                if (!value.isEmpty()){
-                    parameters.putString(key, value);
-                }
-            }
-            return parameters;
-        } catch (Exception ex) {
-            Log.e(TAG, "getParameters: ", ex);
-            return null;
         }
     }
 

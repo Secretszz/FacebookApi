@@ -26,13 +26,13 @@ namespace Bridge.FacebookApi
 		private AndroidJavaObject mSdkManager;
 		private AndroidJavaObject currentActivity;
 
-		void IBridge.InitSDK(IInitListener callback)
+		void IBridge.InitSDK(IBridgeListener callback)
 		{
 			AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
 			currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
 			AndroidJavaClass jc = new AndroidJavaClass(MANAGER_PATH);
 			mSdkManager = jc.CallStatic<AndroidJavaObject>("getInstance");
-			mSdkManager.Call("initSDK", currentActivity, new FBInitCallback(callback));
+			mSdkManager.Call("initSDK", currentActivity, new BridgeCallback(callback));
 		}
 
 		void IBridge.SetAdvertiserTrackingEnabled(bool _enabled)
@@ -44,14 +44,14 @@ namespace Bridge.FacebookApi
 			return mSdkManager.Call<bool>("isInstalled", currentActivity);
 		}
 
-		void IBridge.RetrieveLoginStatus(ILoginListener callback)
+		void IBridge.RetrieveLoginStatus(IBridgeListener callback)
 		{
-			mSdkManager.Call("retrieveLoginStatus", currentActivity, new LoginCallback(callback));
+			mSdkManager.Call("retrieveLoginStatus", currentActivity, new BridgeCallback(callback));
 		}
 
-		void IBridge.Login(ILoginListener callback)
+		void IBridge.Login(IBridgeListener callback)
 		{
-			mSdkManager.Call("login", currentActivity, new LoginCallback(callback));
+			mSdkManager.Call("login", currentActivity, new BridgeCallback(callback));
 		}
 
 		void IBridge.Logout()
@@ -59,24 +59,24 @@ namespace Bridge.FacebookApi
 			mSdkManager.Call("logout");
 		}
 
-		void IBridge.ShareLink(string linkUrl, IShareListener shareListener)
+		void IBridge.ShareLink(string linkUrl, IBridgeListener shareListener)
 		{
-			mSdkManager.Call("shareLink", currentActivity, linkUrl, new FBShareCallback(shareListener));
+			mSdkManager.Call("shareLink", currentActivity, linkUrl, new BridgeCallback(shareListener));
 		}
 
-		void IBridge.ShareVideo(string videoUrl, IShareListener shareListener)
+		void IBridge.ShareVideo(string videoUrl, IBridgeListener shareListener)
 		{
-			mSdkManager.Call("shareVideo", currentActivity, videoUrl, new FBShareCallback(shareListener));
+			mSdkManager.Call("shareVideo", currentActivity, videoUrl, new BridgeCallback(shareListener));
 		}
 
-		void IBridge.ShareImage(string imagePath, IShareListener shareListener)
+		void IBridge.ShareImage(string imagePath, IBridgeListener shareListener)
 		{
-			mSdkManager.Call("shareImage", currentActivity, imagePath, new FBShareCallback(shareListener));
+			mSdkManager.Call("shareImage", currentActivity, imagePath, new BridgeCallback(shareListener));
 		}
 
-		void IBridge.ShareImage(byte[] imageData, IShareListener shareListener)
+		void IBridge.ShareImage(byte[] imageData, IBridgeListener shareListener)
 		{
-			mSdkManager.Call("shareImage", currentActivity, imageData, new FBShareCallback(shareListener));
+			mSdkManager.Call("shareImage", currentActivity, imageData, new BridgeCallback(shareListener));
 		}
 
 		void IBridge.FBLogPurchase(float priceAmount, string priceCurrency, string packageName)
@@ -94,83 +94,6 @@ namespace Bridge.FacebookApi
 		void IBridge.FBLogEvent(string logEvent, Dictionary<string, string> pars)
 		{
 			mSdkManager.Call("logEvent", logEvent, JsonConvert.SerializeObject(pars));
-		}
-
-		private class FBInitCallback : AndroidJavaProxy
-		{
-			private IInitListener callback;
-
-			public FBInitCallback(IInitListener callback) : base(CALLBACK_PATH)
-			{
-				this.callback = callback;
-			}
-
-			public void onSuccess()
-			{
-				//Debug.Log("onSuccess: " + result.Call<string>("getPostId"));
-				callback?.OnSuccess();
-			}
-
-			public void onCancel()
-			{
-				
-			}
-
-			public void onError(int errCode, string errMsg)
-			{
-				//Debug.Log("onError: " + msg);
-				callback?.OnError(errCode, errMsg);
-			}
-		}
-
-		private class FBShareCallback : AndroidJavaProxy
-		{
-			private IShareListener callback;
-
-			public FBShareCallback(IShareListener callback) : base(CALLBACK_PATH)
-			{
-				this.callback = callback;
-			}
-
-			public void onSuccess()
-			{
-				callback?.OnSuccess();
-			}
-
-			public void onCancel()
-			{
-				callback?.OnCancel();
-			}
-
-			public void onError(int errCode, string errMsg)
-			{
-				callback?.OnError(errCode, errMsg);
-			}
-		}
-
-		private class LoginCallback : AndroidJavaProxy
-		{
-			private ILoginListener callback;
-
-			public LoginCallback(ILoginListener callback) : base(CALLBACK_PATH)
-			{
-				this.callback = callback;
-			}
-
-			public void onSuccess(string accessToken)
-			{
-				callback?.OnSuccess(accessToken);
-			}
-
-			public void onCancel()
-			{
-				callback?.OnCancel();
-			}
-
-			public void onError(int errCode, string errMsg)
-			{
-				callback?.OnError(errCode, errMsg);
-			}
 		}
 	}
 }
