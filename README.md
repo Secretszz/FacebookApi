@@ -11,3 +11,5 @@ FacebookSDK适配器
 [Instagram](https://github.com/Secretszz/ThirdSDK_InstagramApi.git)
 
 [QQ](https://github.com/Secretszz/ThirdSDK_QQApi.git)
+
+[支付宝](https://github.com/Secretszz/ThirdSDK_AliApi.git)
