@@ -13,6 +13,7 @@
 #import "FBSDKLoginKit/FBSDKLoginKit.h"
 #import "FBUtility.h"
 #import "UnityAppController.h"
+#import "CommonApi.h"
 
 @implementation FBSDKManager
 
@@ -163,26 +164,26 @@ didFinishLaunchingWithOptions:(nullable NSDictionary<UIApplicationLaunchOptionsK
     void(^ loginHandler)(FBSDKLoginManagerLoginResult *, NSError *) = ^(FBSDKLoginManagerLoginResult * result, NSError * error){
         if (error) {
             NSLog(@"===login error: %@", error.domain);
-            if (self.onCompleteLogin) {
-                self.onCompleteLogin(false, [error.domain UTF8String]);
+            if (self.onError) {
+                self.onError(error.code, [error.domain UTF8String]);
             }
             return;
         }else if (result.isCancelled){
             NSLog(@"===user cancel");
-            if (self.onCompleteLogin) {
-                self.onCompleteLogin(false, "user cancel");
+            if (self.onCancel) {
+                self.onCancel();
             }
             return;
         }
         
         if ([self tryCompleteLogin]) {
-            if (self.onCompleteLogin) {
-                self.onCompleteLogin(true, "success");
+            if (self.onSuccess) {
+                self.onSuccess("success");
             }
         }else{
             NSLog(@"===unknow login error");
-            if (self.onCompleteLogin) {
-                self.onCompleteLogin(false, "unknow login error");
+            if (self.onError) {
+                self.onError(error.code, [error.domain UTF8String]);
             }
         }
     };
@@ -247,8 +248,8 @@ didFinishLaunchingWithOptions:(nullable NSDictionary<UIApplicationLaunchOptionsK
  */
 - (void)sharer:(id<FBSDKSharing>)sharer didCompleteWithResults:(NSDictionary<NSString *, id> *)results{
     NSLog(@"分享成功");
-    if (self.onCompleteShare) {
-        self.onCompleteShare(true, "");
+    if (self.onSuccess) {
+        self.onSuccess("");
     }
 }
 
@@ -259,8 +260,8 @@ didFinishLaunchingWithOptions:(nullable NSDictionary<UIApplicationLaunchOptionsK
  */
 - (void)sharer:(id<FBSDKSharing>)sharer didFailWithError:(NSError *)error{
     NSLog(@"分享失败：%@", error.domain);
-    if (self.onCompleteShare) {
-        self.onCompleteShare(false, [error.domain UTF8String]);
+    if (self.onError) {
+        self.onError(error.code, [error.domain UTF8String]);
     }
 }
 
@@ -270,8 +271,8 @@ didFinishLaunchingWithOptions:(nullable NSDictionary<UIApplicationLaunchOptionsK
  */
 - (void)sharerDidCancel:(id<FBSDKSharing>)sharer{
     NSLog(@"用户取消分享");
-    if (self.onCompleteShare) {
-        self.onCompleteShare(false, "cancel");
+    if (self.onCancel) {
+        self.onCancel();
     }
 }
 
@@ -283,23 +284,27 @@ extern "C" {
     /**
      初始化FBSDK
      */
-    void fb_sdkInitialize(){
+    void fb_sdkInitialize(U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError){
         if ([FBSDKManager instance].initialized){
             NSLog(@"facebook===已初始化");
+            onSuccess("");
         }else{
             NSLog(@"facebook===未初始化");
+            onError(-1, "");
         }
     }
     
     /**
      检测FB登陆情况
      */
-    void fb_logInWithReadPermissions(UnityOnCompleteLogin onCompleteLogin){
-        [FBSDKManager instance].onCompleteLogin = onCompleteLogin;
+    void fb_logInWithReadPermissions(U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError){
+        [FBSDKManager instance].onSuccess = onSuccess;
+        [FBSDKManager instance].onCancel = onCancel;
+        [FBSDKManager instance].onError = onError;
         [[FBSDKManager instance] logInWithReadPermissions];
     }
     
-    bool fb_isLogged(){
+    bool fb_getAccessToken(){
         return [[FBSDKManager instance] isLogged];
     }
     
@@ -311,12 +316,14 @@ extern "C" {
      分享图片
      @param imagePath 图片本地路径
      */
-    void fb_shareImage(const char* imagePath, UnityOnCompleteShare onCompleteShare){
+    void fb_shareImage(const char* imagePath, U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError){
         NSString *path = [NSString stringWithUTF8String:imagePath];
         UIImage* image = [UIImage imageWithContentsOfFile:path];
         NSMutableArray* imageList = [NSMutableArray array];
         [imageList addObject:image];
-        [FBSDKManager instance].onCompleteShare = onCompleteShare;
+        [FBSDKManager instance].onSuccess = onSuccess;
+        [FBSDKManager instance].onCancel = onCancel;
+        [FBSDKManager instance].onError = onError;
         [[FBSDKManager instance] shareImage:imageList];
     }
     
@@ -324,7 +331,7 @@ extern "C" {
      分享图片
      @param imagePath 图片本地路径
      */
-    void fb_shareImageWithDatas(const Byte* datas, int length, UnityOnCompleteShare onCompleteShare){
+    void fb_shareImageWithDatas(const Byte* datas, int length, U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError){
         NSLog(@"fb_shareImageWithDatas");
         NSData * imageData = [NSData dataWithBytes:datas length:length];
         NSLog(@"imageData");
@@ -334,43 +341,49 @@ extern "C" {
         NSLog(@"imageList");
         [imageList addObject:image];
         NSLog(@"addObject");
-        [FBSDKManager instance].onCompleteShare = onCompleteShare;
+        [FBSDKManager instance].onSuccess = onSuccess;
+        [FBSDKManager instance].onCancel = onCancel;
+        [FBSDKManager instance].onError = onError;
         NSLog(@"onCompleteShare");
         [[FBSDKManager instance] shareImage:imageList];
     }
-    
+
     /**
      分享链接
      @param way Unity内部分享途径的字符串
      @param uri 链接地址
      */
-    void fb_shareLink(const char* uri, UnityOnCompleteShare onCompleteShare){
+    void fb_shareLink(const char* uri, U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError){
         NSString *path = [NSString stringWithUTF8String:uri];
         NSURL* url = [NSURL URLWithString:path];
-        [FBSDKManager instance].onCompleteShare = onCompleteShare;
+        [FBSDKManager instance].onSuccess = onSuccess;
+        [FBSDKManager instance].onCancel = onCancel;
+        [FBSDKManager instance].onError = onError;
         [[FBSDKManager instance] shareLink:url];
     }
-    
+
     /**
      分享视频
      @param way Unity内部分享途径的字符串
      @param uri 视频本地路径
      */
-    void fb_shareVideo(const char* uri, UnityOnCompleteShare onCompleteShare){
+    void fb_shareVideo(const char* uri, U3DBridgeCallback_Success onSuccess, U3DBridgeCallback_Cancel onCancel, U3DBridgeCallback_Error onError){
         NSString *path = [NSString stringWithUTF8String:uri];
         NSURL* url = [NSURL URLWithString:path];
-        [FBSDKManager instance].onCompleteShare = onCompleteShare;
+        [FBSDKManager instance].onSuccess = onSuccess;
+        [FBSDKManager instance].onCancel = onCancel;
+        [FBSDKManager instance].onError = onError;
         [[FBSDKManager instance] shareVideo:url];
     }
-    
+
     void fb_logPurchase(const char* logName, double logPurchase, const char* currency, const char* pars){
         [[FBSDKManager instance] logPurchase:logPurchase
                                     currency:currency
                                         pars:pars];
     }
     
-    void fb_logEvent(const char* logName, double valueToNum, const char* pars){
-        [[FBSDKManager instance] logEvent:logName valueToSum:valueToNum pars:pars];
+    void fb_logEventWithSum(const char* logName, double valueToSum, const char* pars){
+        [[FBSDKManager instance] logEvent:logName valueToSum:valueToSum pars:pars];
     }
     
     void fb_logEvent(const char* logName, const char* pars){
