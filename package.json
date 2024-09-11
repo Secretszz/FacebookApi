@@ -14,7 +14,7 @@
   },
   "dependencies":{
     "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.bridge.common": "1.0.0"
+    "com.bridge.common": "1.0.2"
   },
   "publishConfig": {
     "registry": "https://package.openupm.com"
