@@ -18,7 +18,7 @@ namespace Bridge.FacebookApi
     using UnityEditor.Callbacks;
     using Editor;
 
-    public static class ManifestProcessor
+    internal static class ManifestProcessor
     {
         private const string METADATA_APPLICATION_ID  = "com.facebook.sdk.ApplicationId";
         private const string METADATA_CLIENT_TOKEN = "com.facebook.sdk.ClientToken";
