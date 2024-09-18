@@ -1,9 +1,4 @@
 <dependencies>
-  <androidPackages>
-    <androidPackage spec="com.facebook.android:facebook-android-sdk:17.0.1">
-    </androidPackage>
-  </androidPackages>
-
   <iosPods>
     <iosPod name="FBSDKCoreKit" version='~> 16.0'>
     </iosPod>
