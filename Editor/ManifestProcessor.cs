@@ -95,7 +95,7 @@ namespace Bridge.FacebookApi
 
         private static void CopyNativeCode(string projectPath)
         {
-            var remotePackagePath = ThirdSDKPackageManager.GetUnityPackagePath(ThirdSDKPackageManager.FacebookApiPackageName);
+            var remotePackagePath = ThirdSDKPackageManager.GetUnityPackagePath(PackageType.Facebook);
             if (string.IsNullOrEmpty(remotePackagePath))
             {
                 // 这个不是通过ump下载的包，查找工程内部文件夹
